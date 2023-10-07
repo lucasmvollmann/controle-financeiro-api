@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AccountsController } from './accounts.controller';
+import { AccountsController } from 'src/auth/decorators/get-user.decorator';
 import { AccountsService } from './accounts.service';
 
 describe('AccountsController', () => {

@@ -12,6 +12,7 @@ import { User } from 'src/users/entities/user.entity';
 import { AccountsService } from './accounts.service';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
+import { AccountId } from './pipes/account-id.pipe';
 
 @Controller('accounts')
 export class AccountsController {
@@ -28,22 +29,26 @@ export class AccountsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: number) {
-    return this.accountsService.findOne(+id);
+  findOne(@Param('id', AccountId) accountId: number) {
+    return this.accountsService.findOne(accountId);
   }
 
   @Get(':id/members')
-  getMembers(@GetUser() user: User, @Param('id') id: number) {
-    return this.accountsService.getMembers(userId, id);
+  getMembers(@GetUser() user: User, @Param('id', AccountId) accountId: number) {
+    return this.accountsService.getMembers(user.id, accountId);
   }
 
   @Patch(':id')
-  update(@Param('id') id: number, @Body() updateAccountDto: UpdateAccountDto) {
-    return this.accountsService.update(+id, updateAccountDto);
+  update(
+    @GetUser() user: User,
+    @Param('id', AccountId) accountId: number,
+    @Body() updateAccountDto: UpdateAccountDto,
+  ): string {
+    return this.accountsService.update(user.id, accountId, updateAccountDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: number) {
-    return this.accountsService.remove(+id);
+  remove(@GetUser() user: User, @Param('id', AccountId) accountId: number) {
+    return this.accountsService.remove(user.id, accountId);
   }
 }

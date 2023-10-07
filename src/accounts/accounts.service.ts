@@ -1,4 +1,8 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
@@ -9,13 +13,6 @@ export class AccountsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(userId: number, createAccountDto: CreateAccountDto) {
-    /*
-    const accountExists = await this.prisma.accountMember.findFirst({
-      //where: { userId },
-      select: { account: { where: { name: createAccountDto.name } } },
-    });
-    */
-
     const accountExists = await this.prisma.account.findFirst({
       where: { name: createAccountDto.name },
       select: { AccountMember: { where: { userId } } },
@@ -40,20 +37,40 @@ export class AccountsService {
     return `This action returns all accounts`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} account`;
+  findOne(accountId: number) {
+    return `This action returns a #${accountId} account`;
   }
 
-  update(id: number, updateAccountDto: UpdateAccountDto) {
-    return `This action updates a #${id} account`;
+  update(
+    userId: number,
+    accountId: number,
+    updateAccountDto: UpdateAccountDto,
+  ) {
+    return `This action updates a #${accountId} account`;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} account`;
+  remove(userId: number, accountId: number) {
+    throw new UnauthorizedException(
+      'Usuário sem permissão para eliminar a conta.',
+    );
   }
 
-  async getMembers(userId: number, id: number) {
-    const accountMember = await this.prisma.
-    throw new Error('Method not implemented.');
+  async getMembers(userId: number, accountId: number) {
+    const accountMembers = await this.prisma.accountMember.findMany({
+      where: { accountId },
+    });
+
+    if (!accountMembers.some((accountMember) => accountMember.userId == userId))
+      throw new UnauthorizedException(
+        'Uusário sem permissão para acessar a conta.',
+      );
+
+    return accountMembers;
+  }
+
+  async exists(accountId: number): Promise<boolean> {
+    return !!(await this.prisma.account.findUnique({
+      where: { id: accountId },
+    }));
   }
 }
