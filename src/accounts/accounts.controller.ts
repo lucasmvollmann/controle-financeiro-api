@@ -24,13 +24,13 @@ export class AccountsController {
   }
 
   @Get()
-  findAll() {
-    return this.accountsService.findAll();
+  findAll(@GetUser() user: User) {
+    return this.accountsService.findAll(user.id);
   }
 
   @Get(':id')
-  findOne(@Param('id', AccountId) accountId: number) {
-    return this.accountsService.findOne(accountId);
+  findOne(@GetUser() user: User, @Param('id', AccountId) accountId: number) {
+    return this.accountsService.findOne(user.id, accountId);
   }
 
   @Get(':id/members')

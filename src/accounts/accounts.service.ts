@@ -13,14 +13,12 @@ export class AccountsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(userId: number, createAccountDto: CreateAccountDto) {
-    const accountExists = await this.prisma.account.findFirst({
+    const account = await this.prisma.account.findFirst({
       where: { name: createAccountDto.name },
-      select: { AccountMember: { where: { userId } } },
+      include: { accountMember: { where: { userId } } },
     });
 
-    //console.log(accountExists);
-
-    if (accountExists.AccountMember.length > 0)
+    if (account.accountMember.length > 0)
       throw new ConflictException('Nome informado já está em uso');
 
     const data = {
@@ -33,11 +31,11 @@ export class AccountsService {
     return this.prisma.account.create({ data });
   }
 
-  findAll() {
+  findAll(userId: number) {
     return `This action returns all accounts`;
   }
 
-  findOne(accountId: number) {
+  findOne(userId: number, accountId: number) {
     return `This action returns a #${accountId} account`;
   }
 
@@ -49,10 +47,20 @@ export class AccountsService {
     return `This action updates a #${accountId} account`;
   }
 
-  remove(userId: number, accountId: number) {
-    throw new UnauthorizedException(
-      'Usuário sem permissão para eliminar a conta.',
-    );
+  async remove(userId: number, accountId: number) {
+    const account = await this.prisma.account.findUnique({
+      where: { id: accountId },
+      include: {
+        accountMember: true,
+      },
+    });
+
+    if (!this.userIsOwner(userId, account))
+      throw new UnauthorizedException(
+        'Usuário sem permissão para eliminar a conta.',
+      );
+
+    return this.prisma.account.delete({ where: { id: accountId } });
   }
 
   async getMembers(userId: number, accountId: number) {
@@ -72,5 +80,12 @@ export class AccountsService {
     return !!(await this.prisma.account.findUnique({
       where: { id: accountId },
     }));
+  }
+
+  userIsOwner(userId: number, account: any): boolean {
+    return account.accountMember.some(
+      (member) =>
+        member.userId == userId && member.role == AccountMemberRole.Owner,
+    );
   }
 }
