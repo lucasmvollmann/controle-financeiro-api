@@ -43,7 +43,7 @@ export class AccountsController {
     @GetUser() user: User,
     @Param('id', AccountId) accountId: number,
     @Body() updateAccountDto: UpdateAccountDto,
-  ): string {
+  ) {
     return this.accountsService.update(user.id, accountId, updateAccountDto);
   }
 

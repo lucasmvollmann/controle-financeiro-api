@@ -8,7 +8,7 @@ import {
 
 export class CreateAccountDto {
   @IsNotEmpty({ message: 'Nome deve ser informado.' })
-  @IsAlpha()
+  @IsAlpha('pt-BR')
   @IsString({ message: 'Nome inválido.' })
   @IsDefined({ message: 'Nome deve ser informado.' })
   name: string;

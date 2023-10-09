@@ -1,4 +1,19 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateAccountDto } from './create-account.dto';
+import {
+  IsAlpha,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
-export class UpdateAccountDto extends PartialType(CreateAccountDto) {}
+export class UpdateAccountDto {
+  @IsNotEmpty({ message: 'Nome deve ser informado.' })
+  @IsAlpha('pt-BR')
+  @IsString({ message: 'Nome inválido.' })
+  @IsOptional()
+  name: string;
+
+  @IsNumber({ allowNaN: false }, { message: 'Categoria inválida' })
+  @IsOptional()
+  categoryId: number;
+}

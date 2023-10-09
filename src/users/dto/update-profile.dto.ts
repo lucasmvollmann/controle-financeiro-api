@@ -7,7 +7,7 @@ export class UpdateProfileDto implements UpdateProfile {
   @IsOptional()
   email: string;
 
-  @IsAlpha()
+  @IsAlpha('pt-BR')
   @IsNotEmpty({ message: 'Nome deve ser informado.' })
   @IsOptional()
   name: string;

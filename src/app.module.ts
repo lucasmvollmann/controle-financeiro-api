@@ -10,6 +10,7 @@ import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RoleGuard } from './auth/guards/role.guard';
 import { UtilsModule } from './utils/utils.module';
+import { TransactionsModule } from './transactions/transactions.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { UtilsModule } from './utils/utils.module';
     PrismaModule,
     AccountsModule,
     CategoriesModule,
+    TransactionsModule,
   ],
   providers: [
     {

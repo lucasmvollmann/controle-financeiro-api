@@ -12,6 +12,7 @@ import { Public } from './decorators/is-public.decorator';
 import { SignUpDto } from './dto/sign-up.dto';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { AuthRequest } from './models/auth-request.model';
+import { RefreshTokenDto } from './dto/refresh-token-dto.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -23,6 +24,14 @@ export class AuthController {
   @Post('login')
   async login(@Request() req: AuthRequest) {
     return this.authService.login(req.user);
+  }
+
+  @Public()
+  @UseGuards(LocalAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @Post('refresh')
+  async refresh(@Body() refreshTokenDto: RefreshTokenDto) {
+    return this.authService.refresh(refreshTokenDto);
   }
 
   @Public()

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   UnauthorizedException,
@@ -7,6 +8,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { AccountMemberRole } from './enums/account-member-role.enum';
+import { CategoryType } from 'src/categories/enums/category-type.enum';
 
 @Injectable()
 export class AccountsService {
@@ -15,36 +17,126 @@ export class AccountsService {
   async create(userId: number, createAccountDto: CreateAccountDto) {
     const account = await this.prisma.account.findFirst({
       where: { name: createAccountDto.name },
-      include: { accountMember: { where: { userId } } },
+      select: { accountMember: { where: { userId } } },
     });
 
-    if (account.accountMember.length > 0)
+    console.log(account);
+
+    if (account?.accountMember.length > 0)
       throw new ConflictException('Nome informado já está em uso');
+
+    const category = await this.prisma.category.findUnique({
+      where: { id: createAccountDto.categoryId },
+    });
+
+    if (!category)
+      throw new BadRequestException('Categoria informada não existe.');
+
+    if (category.userId != userId)
+      throw new UnauthorizedException(
+        'Usuário sem permissão para acessar a categoria informada.',
+      );
+
+    if (category.type != CategoryType.Account)
+      throw new BadRequestException(
+        'Categoria informada deve ser do tipo Conta.',
+      );
 
     const data = {
       ...createAccountDto,
-      AccountMember: { create: [{ userId, role: AccountMemberRole.Owner }] },
+      accountMember: { create: [{ userId, role: AccountMemberRole.Owner }] },
     };
-
-    console.log(createAccountDto, data);
 
     return this.prisma.account.create({ data });
   }
 
   findAll(userId: number) {
-    return `This action returns all accounts`;
+    return this.prisma.account.findMany({
+      where: { accountMember: { every: { userId } } },
+    });
   }
 
-  findOne(userId: number, accountId: number) {
-    return `This action returns a #${accountId} account`;
+  async findOne(userId: number, accountId: number) {
+    const account = await this.prisma.account.findUnique({
+      where: { id: accountId },
+      include: {
+        accountMember: true,
+      },
+    });
+
+    if (
+      !account.accountMember.filter(
+        (accountMember) => accountMember.userId == userId,
+      )
+    )
+      throw new UnauthorizedException(
+        'Usuário sem permissão para acessar a conta.',
+      );
+
+    delete account.accountMember;
+    return account;
   }
 
-  update(
+  async update(
     userId: number,
     accountId: number,
     updateAccountDto: UpdateAccountDto,
   ) {
-    return `This action updates a #${accountId} account`;
+    const account = await this.prisma.account.findUnique({
+      where: { id: accountId },
+      include: {
+        accountMember: true,
+      },
+    });
+
+    if (!this.userIsOwner(userId, account))
+      throw new UnauthorizedException(
+        'Usuário sem permissão para atualizar a conta.',
+      );
+
+    if (
+      updateAccountDto.name != undefined &&
+      account.name != updateAccountDto.name
+    ) {
+      const accountNameInUse = await this.accountNameInUse(
+        updateAccountDto.name,
+        userId,
+      );
+
+      if (accountNameInUse)
+        throw new ConflictException('Nome informado já está em uso.');
+    }
+
+    if (
+      updateAccountDto.categoryId != undefined &&
+      account.categoryId != updateAccountDto.categoryId
+    ) {
+      const category = await this.prisma.category.findUnique({
+        where: { id: updateAccountDto.categoryId },
+      });
+
+      if (!category)
+        throw new BadRequestException('Categoria informada não existe.');
+
+      if (category.userId != userId)
+        throw new UnauthorizedException(
+          'Usuário sem permissão para acessar a categoria informada.',
+        );
+
+      if (category.type != CategoryType.Account)
+        throw new BadRequestException(
+          'Categoria informada deve ser do tipo Conta.',
+        );
+    }
+
+    const data = updateAccountDto;
+
+    const createdAccount = await this.prisma.account.update({
+      where: { id: accountId },
+      data,
+    });
+
+    return createdAccount;
   }
 
   async remove(userId: number, accountId: number) {
@@ -70,7 +162,7 @@ export class AccountsService {
 
     if (!accountMembers.some((accountMember) => accountMember.userId == userId))
       throw new UnauthorizedException(
-        'Uusário sem permissão para acessar a conta.',
+        'Usuário sem permissão para acessar a conta.',
       );
 
     return accountMembers;
@@ -87,5 +179,14 @@ export class AccountsService {
       (member) =>
         member.userId == userId && member.role == AccountMemberRole.Owner,
     );
+  }
+
+  async accountNameInUse(name: string, userId: number) {
+    const account = await this.prisma.account.findFirst({
+      where: { name },
+      select: { accountMember: { where: { userId } } },
+    });
+
+    return account ? account.accountMember.length > 0 : false;
   }
 }
