@@ -3,7 +3,6 @@ import {
   IsDecimal,
   IsDefined,
   IsNumber,
-  IsNumberString,
   IsString,
 } from 'class-validator';
 
@@ -22,9 +21,9 @@ export class CreateTransactionDto {
 
   @IsNumber({ allowNaN: false }, { message: 'Conta inválida.' })
   @IsDefined({ message: 'Conta deve ser informada.' })
-  accountId: number;
+  account_id: number;
 
   @IsNumber({ allowNaN: false }, { message: 'Categoria inválida.' })
   @IsDefined({ message: 'Categoria deve ser informada.' })
-  categoryId: number;
+  category_id: number;
 }

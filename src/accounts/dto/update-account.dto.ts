@@ -15,5 +15,5 @@ export class UpdateAccountDto {
 
   @IsNumber({ allowNaN: false }, { message: 'Categoria inválida' })
   @IsOptional()
-  categoryId: number;
+  category_id: number;
 }

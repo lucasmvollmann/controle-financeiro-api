@@ -10,7 +10,7 @@ import {
 export class UpdatePasswordDto {
   @IsNotEmpty({ message: 'Senha deve ser informada.' })
   @IsDefined({ message: 'Senha deve ser informada.' })
-  oldPassword: string;
+  old_password: string;
 
   @IsStrongPassword(getPasswordOptions(), {
     message:
@@ -18,12 +18,12 @@ export class UpdatePasswordDto {
   })
   @IsNotEmpty({ message: 'Nova senha deve ser informada.' })
   @IsDefined({ message: 'Nova senha deve ser informada.' })
-  newPassword: string;
+  new_password: string;
 
   @Match('newPassword', { message: 'Confirmação de senha inválida.' })
   @IsNotEmpty({ message: 'Confirmação de senha deve ser informada.' })
   @IsDefined({ message: 'Confirmação de senha deve ser informada.' })
-  newPasswordConfirm: string;
+  new_password_confirm: string;
 }
 
 function getPasswordOptions(): IsStrongPasswordOptions {

@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { PasswordHelper } from 'src/utils/helpers/password.helper';
 import { UsersService } from '../users/users.service';
 import { SignUpDto } from './dto/sign-up.dto';
-import { RefreshTokenDto } from './dto/refresh-token-dto.dto';
+import { User } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -49,7 +49,21 @@ export class AuthService {
     };
   }
 
-  async refresh(refreshTokenDto: RefreshTokenDto) {}
+  async refresh(user: User) {
+    const payload = {
+      email: user.email,
+      name: user.name,
+      sub: user.id,
+      role: user.role,
+    };
+
+    return {
+      access_token: this.jwtService.sign(payload, {
+        secret: process.env.JWT_TOKEN_SECRET,
+        expiresIn: process.env.JWT_TOKEN_EXPIRES,
+      }),
+    };
+  }
 
   async signup(signUpDto: SignUpDto) {
     return this.usersService.create(signUpDto);

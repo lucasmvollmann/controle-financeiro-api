@@ -15,5 +15,5 @@ export class CreateAccountDto {
 
   @IsNumber({ allowNaN: false }, { message: 'Categoria inválida' })
   @IsDefined({ message: 'Categoria deve ser informada.' })
-  categoryId: number;
+  category_id: number;
 }

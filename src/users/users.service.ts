@@ -76,7 +76,7 @@ export class UsersService {
 
     const isPasswordMatch = await this.passwordHelper.verify(
       user.password,
-      updatePasswordDto.oldPassword,
+      updatePasswordDto.old_password,
     );
 
     if (!isPasswordMatch) {
@@ -84,7 +84,7 @@ export class UsersService {
     }
 
     const newPassword = await this.passwordHelper.hash(
-      updatePasswordDto.newPassword,
+      updatePasswordDto.new_password,
     );
 
     const savedPassword = !!(await this.prisma.user.update({

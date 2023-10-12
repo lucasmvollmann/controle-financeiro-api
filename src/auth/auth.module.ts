@@ -9,6 +9,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { AuthController } from './auth.controller';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { PasswordHelper } from 'src/utils/helpers/password.helper';
+import { RefreshJwtStrategy } from './strategies/refresh-jwt.strategy';
 
 const jwtConfig = {
   global: true,
@@ -27,6 +28,7 @@ const jwtConfig = {
     AuthService,
     LocalStrategy,
     JwtStrategy,
+    RefreshJwtStrategy,
   ],
 })
 export class AuthModule {}

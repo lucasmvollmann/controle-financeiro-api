@@ -14,25 +14,25 @@ import { CategoryType } from 'src/categories/enums/category-type.enum';
 export class AccountsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(userId: number, createAccountDto: CreateAccountDto) {
+  async create(user_id: number, createAccountDto: CreateAccountDto) {
     const account = await this.prisma.account.findFirst({
       where: { name: createAccountDto.name },
-      select: { accountMember: { where: { userId } } },
+      select: { account_member: { where: { user_id } } },
     });
 
     console.log(account);
 
-    if (account?.accountMember.length > 0)
+    if (account?.account_member.length > 0)
       throw new ConflictException('Nome informado já está em uso');
 
     const category = await this.prisma.category.findUnique({
-      where: { id: createAccountDto.categoryId },
+      where: { id: createAccountDto.category_id },
     });
 
     if (!category)
       throw new BadRequestException('Categoria informada não existe.');
 
-    if (category.userId != userId)
+    if (category.user_id != user_id)
       throw new UnauthorizedException(
         'Usuário sem permissão para acessar a categoria informada.',
       );
@@ -44,52 +44,52 @@ export class AccountsService {
 
     const data = {
       ...createAccountDto,
-      accountMember: { create: [{ userId, role: AccountMemberRole.Owner }] },
+      account_member: { create: [{ user_id, role: AccountMemberRole.Owner }] },
     };
 
     return this.prisma.account.create({ data });
   }
 
-  findAll(userId: number) {
+  findAll(user_id: number) {
     return this.prisma.account.findMany({
-      where: { accountMember: { every: { userId } } },
+      where: { account_member: { every: { user_id } } },
     });
   }
 
-  async findOne(userId: number, accountId: number) {
+  async findOne(user_id: number, account_id: number) {
     const account = await this.prisma.account.findUnique({
-      where: { id: accountId },
+      where: { id: account_id },
       include: {
-        accountMember: true,
+        account_member: true,
       },
     });
 
     if (
-      !account.accountMember.filter(
-        (accountMember) => accountMember.userId == userId,
+      !account.account_member.filter(
+        (account_member) => account_member.user_id == user_id,
       )
     )
       throw new UnauthorizedException(
         'Usuário sem permissão para acessar a conta.',
       );
 
-    delete account.accountMember;
+    delete account.account_member;
     return account;
   }
 
   async update(
-    userId: number,
-    accountId: number,
+    user_id: number,
+    account_id: number,
     updateAccountDto: UpdateAccountDto,
   ) {
     const account = await this.prisma.account.findUnique({
-      where: { id: accountId },
+      where: { id: account_id },
       include: {
-        accountMember: true,
+        account_member: true,
       },
     });
 
-    if (!this.userIsOwner(userId, account))
+    if (!this.userIsOwner(user_id, account))
       throw new UnauthorizedException(
         'Usuário sem permissão para atualizar a conta.',
       );
@@ -100,7 +100,7 @@ export class AccountsService {
     ) {
       const accountNameInUse = await this.accountNameInUse(
         updateAccountDto.name,
-        userId,
+        user_id,
       );
 
       if (accountNameInUse)
@@ -108,17 +108,17 @@ export class AccountsService {
     }
 
     if (
-      updateAccountDto.categoryId != undefined &&
-      account.categoryId != updateAccountDto.categoryId
+      updateAccountDto.category_id != undefined &&
+      account.category_id != updateAccountDto.category_id
     ) {
       const category = await this.prisma.category.findUnique({
-        where: { id: updateAccountDto.categoryId },
+        where: { id: updateAccountDto.category_id },
       });
 
       if (!category)
         throw new BadRequestException('Categoria informada não existe.');
 
-      if (category.userId != userId)
+      if (category.user_id != user_id)
         throw new UnauthorizedException(
           'Usuário sem permissão para acessar a categoria informada.',
         );
@@ -132,61 +132,65 @@ export class AccountsService {
     const data = updateAccountDto;
 
     const createdAccount = await this.prisma.account.update({
-      where: { id: accountId },
+      where: { id: account_id },
       data,
     });
 
     return createdAccount;
   }
 
-  async remove(userId: number, accountId: number) {
+  async remove(user_id: number, account_id: number) {
     const account = await this.prisma.account.findUnique({
-      where: { id: accountId },
+      where: { id: account_id },
       include: {
-        accountMember: true,
+        account_member: true,
       },
     });
 
-    if (!this.userIsOwner(userId, account))
+    if (!this.userIsOwner(user_id, account))
       throw new UnauthorizedException(
         'Usuário sem permissão para eliminar a conta.',
       );
 
-    return this.prisma.account.delete({ where: { id: accountId } });
+    return this.prisma.account.delete({ where: { id: account_id } });
   }
 
-  async getMembers(userId: number, accountId: number) {
-    const accountMembers = await this.prisma.accountMember.findMany({
-      where: { accountId },
+  async getMembers(user_id: number, account_id: number) {
+    const account_members = await this.prisma.account_member.findMany({
+      where: { account_id },
     });
 
-    if (!accountMembers.some((accountMember) => accountMember.userId == userId))
+    if (
+      !account_members.some(
+        (account_member) => account_member.user_id == user_id,
+      )
+    )
       throw new UnauthorizedException(
         'Usuário sem permissão para acessar a conta.',
       );
 
-    return accountMembers;
+    return account_members;
   }
 
-  async exists(accountId: number): Promise<boolean> {
+  async exists(account_id: number): Promise<boolean> {
     return !!(await this.prisma.account.findUnique({
-      where: { id: accountId },
+      where: { id: account_id },
     }));
   }
 
-  userIsOwner(userId: number, account: any): boolean {
-    return account.accountMember.some(
+  userIsOwner(user_id: number, account: any): boolean {
+    return account.account_member.some(
       (member) =>
-        member.userId == userId && member.role == AccountMemberRole.Owner,
+        member.user_id == user_id && member.role == AccountMemberRole.Owner,
     );
   }
 
-  async accountNameInUse(name: string, userId: number) {
+  async accountNameInUse(name: string, user_id: number) {
     const account = await this.prisma.account.findFirst({
       where: { name },
-      select: { accountMember: { where: { userId } } },
+      select: { account_member: { where: { user_id } } },
     });
 
-    return account ? account.accountMember.length > 0 : false;
+    return account ? account.account_member.length > 0 : false;
   }
 }

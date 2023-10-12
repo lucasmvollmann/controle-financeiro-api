@@ -1,4 +1,4 @@
-import { CategoryType } from '@prisma/client';
+import { CategoryType } from '../enums/category-type.enum';
 import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class UpdateCategoryDto {

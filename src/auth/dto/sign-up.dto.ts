@@ -24,7 +24,7 @@ export class SignUpDto {
 
   @IsDefined({ message: 'Confirmação de senha deve ser informada.' })
   @Match('password', { message: 'Confirmação de senha inválida.' })
-  passwordConfirm: string;
+  password_confirm: string;
 
   @IsDefined({ message: 'Nome deve ser informado.' })
   @IsNotEmpty({ message: 'Nome deve ser informado.' })

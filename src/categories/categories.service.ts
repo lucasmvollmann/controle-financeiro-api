@@ -4,12 +4,14 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { CategoryType, Prisma, UserRole } from '@prisma/client';
+import { CategoryType } from './enums/category-type.enum';
+//import { UserRole } from 'src/users/enums/user-role.enum';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { StringHelper } from 'src/utils/helpers/string.helper';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { QueryCategoryDto } from './dto/query-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { Prisma, UserRole } from '@prisma/client';
 
 @Injectable()
 export class CategoriesService {
@@ -18,7 +20,7 @@ export class CategoriesService {
     private readonly stringHelper: StringHelper,
   ) {}
 
-  async create(userId: number, createCategoryDto: CreateCategoryDto) {
+  async create(user_id: number, createCategoryDto: CreateCategoryDto) {
     const categoryExists = !!(await this.prisma.category.findFirst({
       where: {
         name: createCategoryDto.name,
@@ -30,7 +32,7 @@ export class CategoriesService {
           },
           {
             user: {
-              id: userId,
+              id: user_id,
             },
           },
         ],
@@ -40,15 +42,15 @@ export class CategoriesService {
     if (categoryExists)
       throw new ConflictException('Nome informado já está em uso.');
 
-    const data = { ...createCategoryDto, userId };
+    const data = { ...createCategoryDto, user_id };
 
     return this.prisma.category.create({ data });
   }
 
-  findAll(userId: number, query?: QueryCategoryDto) {
+  findAll(user_id: number, query?: QueryCategoryDto) {
     const where = {
       where: {
-        userId: userId,
+        user_id: user_id,
         name: { contains: query?.name, mode: Prisma.QueryMode.insensitive },
         type: query?.type
           ? (this.stringHelper.capitalize(query?.type) as CategoryType)
@@ -59,9 +61,9 @@ export class CategoriesService {
     return this.prisma.category.findMany(where);
   }
 
-  async findOne(userId: number, id: number) {
+  async findOne(user_id: number, id: number) {
     const userHasPermission = await this.prisma.category.findUnique({
-      where: { id, userId },
+      where: { id, user_id },
     });
 
     if (!userHasPermission)
@@ -73,12 +75,12 @@ export class CategoriesService {
   }
 
   async update(
-    userId: number,
+    user_id: number,
     id: number,
     updateCategoryDto: UpdateCategoryDto,
   ) {
     const userHasPermission = await this.prisma.category.findUnique({
-      where: { id, userId },
+      where: { id, user_id },
     });
 
     if (!userHasPermission)
@@ -101,7 +103,7 @@ export class CategoriesService {
             },
             {
               user: {
-                id: userId,
+                id: user_id,
               },
             },
           ],
@@ -127,7 +129,7 @@ export class CategoriesService {
             },
             {
               user: {
-                id: userId,
+                id: user_id,
               },
             },
           ],
@@ -140,7 +142,7 @@ export class CategoriesService {
         );
     }
 
-    const data = { ...updateCategoryDto, userId };
+    const data = { ...updateCategoryDto, user_id };
 
     const createdCategory = await this.prisma.category.update({
       where: { id },
@@ -150,7 +152,7 @@ export class CategoriesService {
     return createdCategory;
   }
 
-  async remove(userId: number, id: number) {
+  async remove(user_id: number, id: number) {
     const category = await this.prisma.category.findUnique({
       where: { id },
       include: {
@@ -160,7 +162,7 @@ export class CategoriesService {
       },
     });
 
-    if (category.userId != userId)
+    if (category.user_id != user_id)
       throw new UnauthorizedException(
         'Usuário não tem permissão para excluir a categoria.',
       );
@@ -173,7 +175,7 @@ export class CategoriesService {
     return this.prisma.category.delete({ where: { id } });
   }
 
-  async exists(id: number, userId?: number) {
-    return this.prisma.category.findUnique({ where: { id, userId } });
+  async exists(id: number, user_id?: number) {
+    return this.prisma.category.findUnique({ where: { id, user_id } });
   }
 }

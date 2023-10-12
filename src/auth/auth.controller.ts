@@ -12,7 +12,9 @@ import { Public } from './decorators/is-public.decorator';
 import { SignUpDto } from './dto/sign-up.dto';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { AuthRequest } from './models/auth-request.model';
-import { RefreshTokenDto } from './dto/refresh-token-dto.dto';
+import { RefreshJwtAuthGuard } from './guards/refresh-jwt-auth.guard';
+import { GetUser } from './decorators/get-user.decorator';
+import { User } from 'src/users/entities/user.entity';
 
 @Controller('auth')
 export class AuthController {
@@ -27,11 +29,11 @@ export class AuthController {
   }
 
   @Public()
-  @UseGuards(LocalAuthGuard)
+  @UseGuards(RefreshJwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @Post('refresh')
-  async refresh(@Body() refreshTokenDto: RefreshTokenDto) {
-    return this.authService.refresh(refreshTokenDto);
+  async refresh(@GetUser() user: User) {
+    return this.authService.refresh(user);
   }
 
   @Public()

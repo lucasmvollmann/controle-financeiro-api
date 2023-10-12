@@ -27,9 +27,9 @@ export class QueryTransactionDto {
 
   @IsNumber({ allowNaN: false }, { message: 'Conta informada inválida.' })
   @IsOptional()
-  accountId: number;
+  account_id: number;
 
   @IsNumber({ allowNaN: false }, { message: 'Categoria informada inválida.' })
   @IsOptional()
-  categoryId: number;
+  category_id: number;
 }

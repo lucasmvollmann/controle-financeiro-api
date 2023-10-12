@@ -29,26 +29,29 @@ export class AccountsController {
   }
 
   @Get(':id')
-  findOne(@GetUser() user: User, @Param('id', AccountId) accountId: number) {
-    return this.accountsService.findOne(user.id, accountId);
+  findOne(@GetUser() user: User, @Param('id', AccountId) account_id: number) {
+    return this.accountsService.findOne(user.id, account_id);
   }
 
   @Get(':id/members')
-  getMembers(@GetUser() user: User, @Param('id', AccountId) accountId: number) {
-    return this.accountsService.getMembers(user.id, accountId);
+  getMembers(
+    @GetUser() user: User,
+    @Param('id', AccountId) account_id: number,
+  ) {
+    return this.accountsService.getMembers(user.id, account_id);
   }
 
   @Patch(':id')
   update(
     @GetUser() user: User,
-    @Param('id', AccountId) accountId: number,
+    @Param('id', AccountId) account_id: number,
     @Body() updateAccountDto: UpdateAccountDto,
   ) {
-    return this.accountsService.update(user.id, accountId, updateAccountDto);
+    return this.accountsService.update(user.id, account_id, updateAccountDto);
   }
 
   @Delete(':id')
-  remove(@GetUser() user: User, @Param('id', AccountId) accountId: number) {
-    return this.accountsService.remove(user.id, accountId);
+  remove(@GetUser() user: User, @Param('id', AccountId) account_id: number) {
+    return this.accountsService.remove(user.id, account_id);
   }
 }
